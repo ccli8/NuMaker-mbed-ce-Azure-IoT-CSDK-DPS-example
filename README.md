@@ -75,47 +75,89 @@ In the following, we take [NuMaker-IoT-M487](https://os.mbed.com/platforms/NUMAK
     $ mbed deploy
     ```
 
-1.  Configure HSM type. Set `hsm_type` to `HSM_TYPE_SYMM_KEY` to match [symmetric key](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service#attestation-mechanism) attestation type.
-    In `mbed_app.json`:
+1.  Configure connecting with IoT Hub via DPS or straight. To via DPS, set value of `use_dps` to `true`; otherwise, `null`.
+
+    **mbed_app.json**:
     ```json
-        "hsm_type": {
-            "help": "Select support HSM type",
-            "options": ["HSM_TYPE_SYMM_KEY", "HSM_TYPE_X509"],
-            "value": "HSM_TYPE_SYMM_KEY"
+        "use_dps": {
+            "help": "Enable connecting with IoT Hub via DPS",
+            "options": [null, true],
+            "value": true,
+            "macro_name": "USE_PROV_MODULE_FULL"
         },
     ```
 
-1.  Configure DPS parameters. They should have been noted in [above](#operations-on-azure-portal).
-    In `mbed_app.json`:
-    ```json
-        "provision_registration_id": {
-            "help": "Registration ID when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types",
-            "value": "\"REGISTRATION_ID\""
-        },
-        "provision_symmetric_key": {
-            "help": "Symmetric key when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types",
-            "value": "\"SYMMETRIC_KEY\""
-        },
-        "provision_endpoint": {
-            "help": "Device provisioning service URI",
-            "value": "\"global.azure-devices-provisioning.net\""
-        },
-        "provision_id_scope": {
-            "help": "Device provisioning service ID scope",
-            "value": "\"ID_SCOPE\""
-        },
-    ```
+1.  On connecting with IoT Hub via DPS,
 
-    **NOTE**: For non-symmetric key attestation type, `provision_symmetric_key` is unnecessary and `provision_registration_id` is acquired through other means.
+    1.  Configure HSM type. Set `hsm_type` to `HSM_TYPE_SYMM_KEY` to match [symmetric key](https://docs.microsoft.com/en-us/azure/iot-dps/concepts-service#attestation-mechanism) attestation type.
 
-1.  Eenable Azure C-SDK provisioning client module and custom HSM.
-    In `mbed_app.json`:
-    ```
-    "macros": [
-        "USE_PROV_MODULE",
-        "HSM_AUTH_TYPE_CUSTOM"
-    ],
-    ```
+        **mbed_app.json**:
+        ```json
+            "hsm_type": {
+                "help": "Select support HSM type (DPS)",
+                "options": ["HSM_TYPE_SYMM_KEY", "HSM_TYPE_X509"],
+                "value": "HSM_TYPE_SYMM_KEY"
+            },
+        ```
+
+    1.  Configure DPS parameters. They should have been noted in [above](#operations-on-azure-portal).
+
+        **mbed_app.json**:
+        ```json
+            "provision_registration_id": {
+                "help": "Registration ID when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types (DPS)",
+                "value": "\"REGISTRATION_ID\""
+            },
+            "provision_symmetric_key": {
+                "help": "Symmetric key when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types (DPS)",
+                "value": "\"SYMMETRIC_KEY\""
+            },
+            "provision_endpoint": {
+                "help": "Device provisioning service URI (DPS)",
+                "value": "\"global.azure-devices-provisioning.net\""
+            },
+            "provision_id_scope": {
+                "help": "Device provisioning service ID scope (DPS)",
+                "value": "\"ID_SCOPE\""
+            },
+        ```
+
+        **NOTE**: For non-symmetric key attestation type, `provision_symmetric_key` is unnecessary and `provision_registration_id` is acquired through other means.
+
+    1.  Enable Azure C-SDK provisioning client module and custom HSM.
+
+        **mbed_app.json**:
+        ```
+        "macros": [
+            "USE_PROV_MODULE",
+            "HSM_AUTH_TYPE_CUSTOM"
+        ],
+        ```
+1.  On connecting with IoT Hub straight, 
+
+    1.  Configure connection string.
+
+        **mbed_app.json**:
+        ```json
+            "iothub_connection_string": {
+                "help": "Device connection string for IoT Hub authentication when DPS is not used",
+                "value": "\"IOTHUB_CONNECTION_STRING\""
+            },
+        ```
+
+        **NOTE**: With Mbed CLI 2, CMake uses semicolon as list separator,
+        and doesn't handle `iothub_connection_string` with semicolon correctly.
+        Use Mbed CLI 1 anyway.
+
+    1.  Disable Azure C-SDK provisioning client module and custom HSM.
+
+        **mbed_app.json**:
+        <pre>
+            "macros": [
+                <del>"USE_PROV_MODULE",</del>
+                <del>"HSM_AUTH_TYPE_CUSTOM"</del>
+            ],
+        </pre>
 
 1.  Configure network interface
     -   Ethernet: Need no further configuration.

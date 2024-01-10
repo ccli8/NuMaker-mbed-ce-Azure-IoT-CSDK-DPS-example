@@ -1,25 +1,35 @@
 {
     "config": {
+        "use_dps": {
+            "help": "Enable connecting with IoT Hub via DPS",
+            "options": [null, true],
+            "value": true,
+            "macro_name": "USE_PROV_MODULE_FULL"
+        },
         "hsm_type": {
-            "help": "Select support HSM type",
+            "help": "Select support HSM type (DPS)",
             "options": ["HSM_TYPE_SYMM_KEY", "HSM_TYPE_X509"],
             "value": "HSM_TYPE_SYMM_KEY"
         },
         "provision_registration_id": {
-            "help": "Registration ID when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types",
+            "help": "Registration ID when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types (DPS)",
             "value": "\"REGISTRATION_ID\""
         },
         "provision_symmetric_key": {
-            "help": "Symmetric key when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types",
+            "help": "Symmetric key when HSM_TYPE_SYMM_KEY is supported; Ignored for other HSM types (DPS)",
             "value": "\"SYMMETRIC_KEY\""
         },
         "provision_endpoint": {
-            "help": "Device provisioning service URI",
+            "help": "Device provisioning service URI (DPS)",
             "value": "\"global.azure-devices-provisioning.net\""
         },
         "provision_id_scope": {
-            "help": "Device provisioning service ID scope",
+            "help": "Device provisioning service ID scope (DPS)",
             "value": "\"ID_SCOPE\""
+        },
+        "iothub_connection_string": {
+            "help": "Device connection string for IoT Hub authentication (NO DPS)",
+            "value": "\"IOTHUB_CONNECTION_STRING\""
         },
         "iothub_client_trace": {
             "help": "Enable IoT Hub Client tracing",

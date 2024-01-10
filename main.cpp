@@ -38,6 +38,7 @@
 
 #include "certs.h"
 
+#ifdef USE_PROV_MODULE_FULL
 #define HSM_TYPE_SYMM_KEY                   1
 #define HSM_TYPE_X509                       2
 
@@ -66,11 +67,16 @@ static const char* id_scope = MBED_CONF_APP_PROVISION_ID_SCOPE;
 static const char* registration_id = MBED_CONF_APP_PROVISION_REGISTRATION_ID;
 static const char* symmetric_key = MBED_CONF_APP_PROVISION_SYMMETRIC_KEY;
 #endif
+#else
+// MQTT protocol
+#include "iothubtransportmqtt.h"
+#endif /* USE_PROV_MODULE_FULL */
 
 #define PROXY_PORT                  8888
 #define MESSAGES_TO_SEND            2
 #define TIME_BETWEEN_MESSAGES       2
     
+#ifdef USE_PROV_MODULE_FULL
 typedef struct CLIENT_SAMPLE_INFO_TAG
 {
     unsigned int sleep_time;
@@ -80,6 +86,7 @@ typedef struct CLIENT_SAMPLE_INFO_TAG
     char* device_id;
     int registration_complete;
 } CLIENT_SAMPLE_INFO;
+#endif /* USE_PROV_MODULE_FULL */
 
 typedef struct IOTHUB_CLIENT_SAMPLE_INFO_TAG
 {
@@ -96,11 +103,13 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HAND
     return IOTHUBMESSAGE_ACCEPTED;
 }
 
+#ifdef USE_PROV_MODULE_FULL
 static void registration_status_callback(PROV_DEVICE_REG_STATUS reg_status, void* user_context)
 {
     (void)user_context;
     LogInfo("Provisioning Status: %s\r\n", MU_ENUM_TO_STRING(PROV_DEVICE_REG_STATUS, reg_status));
 }
+#endif /* USE_PROV_MODULE_FULL */
 
 static void iothub_connection_status(IOTHUB_CLIENT_CONNECTION_STATUS result, IOTHUB_CLIENT_CONNECTION_STATUS_REASON reason, void* user_context)
 {
@@ -124,6 +133,7 @@ static void iothub_connection_status(IOTHUB_CLIENT_CONNECTION_STATUS result, IOT
     }
 }
 
+#ifdef USE_PROV_MODULE_FULL
 static void register_device_callback(PROV_DEVICE_RESULT register_result, const char* iothub_uri, const char* device_id, void* user_context)
 {
     if (user_context == NULL)
@@ -147,17 +157,20 @@ static void register_device_callback(PROV_DEVICE_RESULT register_result, const c
         }
     }
 }
+#endif /* USE_PROV_MODULE_FULL */
 
 // Global symbol referenced by the Azure SDK's port for Mbed OS, via "extern"
 NetworkInterface *_defaultSystemNetwork;
 
 int main()
 {
+#ifdef USE_PROV_MODULE_FULL
 #if (MBED_CONF_APP_HSM_TYPE == HSM_TYPE_SYMM_KEY)
     SECURE_DEVICE_TYPE hsm_type = SECURE_DEVICE_TYPE_SYMMETRIC_KEY;
 #elif (MBED_CONF_APP_HSM_TYPE == HSM_TYPE_X509)
     SECURE_DEVICE_TYPE hsm_type = SECURE_DEVICE_TYPE_X509;
 #endif
+#endif  /* USE_PROV_MODULE_FULL */
 
     LogInfo("Connecting to the network");
 
@@ -193,6 +206,7 @@ int main()
     bool traceOn = MBED_CONF_APP_IOTHUB_CLIENT_TRACE;
 
     (void)IoTHub_Init();
+#ifdef USE_PROV_MODULE_FULL
     (void)prov_dev_security_init(hsm_type);
 
 #if (MBED_CONF_APP_HSM_TYPE == HSM_TYPE_SYMM_KEY)
@@ -245,12 +259,15 @@ int main()
         }
         Prov_Device_LL_Destroy(handle);
     }
+#endif /* USE_PROV_MODULE_FULL */
 
+#ifdef USE_PROV_MODULE_FULL
     if (user_ctx.registration_complete != 1)
     {
         LogInfo("registration failed!\r\n");
     }
     else
+#endif /* USE_PROV_MODULE_FULL */
     {
         IOTHUB_CLIENT_TRANSPORT_PROVIDER iothub_transport;
 
@@ -260,10 +277,17 @@ int main()
         IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
 
         LogInfo("Creating IoTHub Device handle\r\n");
+#ifdef USE_PROV_MODULE_FULL
         if ((device_ll_handle = IoTHubDeviceClient_LL_CreateFromDeviceAuth(user_ctx.iothub_uri, user_ctx.device_id, iothub_transport) ) == NULL)
         {
             LogInfo("failed create IoTHub client from connection string %s!\r\n", user_ctx.iothub_uri);
         }
+#else
+        if ((device_ll_handle = IoTHubDeviceClient_LL_CreateFromConnectionString(MBED_CONF_APP_IOTHUB_CONNECTION_STRING, iothub_transport) ) == NULL)
+        {
+            LogInfo("failed create IoTHub client from connection string %s!\r\n", MBED_CONF_APP_IOTHUB_CONNECTION_STRING);
+        }
+#endif /* USE_PROV_MODULE_FULL */
         else
         {
             IOTHUB_CLIENT_SAMPLE_INFO iothub_info;
@@ -334,9 +358,11 @@ int main()
             IoTHubDeviceClient_LL_Destroy(device_ll_handle);
         }
     }
+#ifdef USE_PROV_MODULE_FULL
     free(user_ctx.iothub_uri);
     free(user_ctx.device_id);
     prov_dev_security_deinit();
+#endif /* USE_PROV_MODULE_FULL */
 
     // Free all the sdk subsystem
     IoTHub_Deinit();
